@@ -248,7 +248,7 @@ function onLoad()
     
     SwapButton = getObjectFromGUID('644a28')
     SwapButton.createButton({
-        click_function = "doSwap",
+        click_function = "swapSectorCards",
         function_owner = Global,
         label          = "Swap Sectors",
         position       = {0,0,0},
@@ -262,7 +262,7 @@ function onLoad()
     
     for k=1,3 do
         getObjectFromGUID(SectorDecks[k]).createButton({
-            click_function = "ResupplySector" .. k,
+            click_function = "resupplySector" .. k,
             function_owner = Global,
             label          = "Resupply",
             position       = {0,0.4,-0.35},
@@ -485,6 +485,7 @@ function addBiodome()
     end
 end
 
+-- Switch out 6 different sector colony cards with biodome colony cards
 function checkBiodomeColonyCard()
     biodomeColonyCards.takeObject({
         flip = true,
@@ -493,10 +494,10 @@ function checkBiodomeColonyCard()
         callback_function = function(card)
             local sectorNumber = card.getRotationValue()                  
             if foundBiodomeCardTotal < 6 then
+                -- Only switch out colony cards if the sector hasn't already been switched
                 if searchedBiodomeCards[sectorNumber] == nil then
                     searchedBiodomeCards[sectorNumber] = true
                     foundBiodomeCardTotal = foundBiodomeCardTotal + 1
-                    
                     
                     colonyCard = findColonySectorCard(sectorNumber)
                     local colonyPosition = colonyCard.getPosition()
@@ -504,33 +505,35 @@ function checkBiodomeColonyCard()
                     colonyCard.setPositionSmooth({10.12, 1.2, 30.34})
                     card.setPositionSmooth(colonyPosition)
                 end
+                -- Since there aren't 6 switched colony cards, run the function again
                 _G['checkBiodomeColonyCard']()
-            else
-                
             end
         end
     })
 end
 
-function findColonySectorCard(n)
+function findColonySectorCard(sectorNumber)
     local cards = getObjectFromGUID(ColonyCardsZone).getObjects()
     for index, card in ipairs(cards) do
-        if (string.find(card.type, 'Card') and card.getRotationValue() == n) then
+        if (string.find(card.type, 'Card') and card.getRotationValue() == sectorNumber) then
             return card
         end
     end
 end
 
+-- Start the game
 function startShuffleDeal()
+    -- Shuffle the sector decks
     for k=1,3 do
         find_pile(getObjectFromGUID(SectorDecks[k])).shuffle()
     end
-
     print('Shuffling decks.')
-    Turns.enable = true
     
+    -- Enabling turns will trigger the onTurnEnd function, which will resupply the marketplace
+    Turns.enable = true    
     print('Resupplying marketplace.')
-    
+
+    -- Starting card locations
     local Starters = {
         Red = {-22.42, 4, -16.78},
         Orange = {-22.42, 4, -5.22},
@@ -541,14 +544,15 @@ function startShuffleDeal()
         Teal = {10.26, 4, 6.80}
     }
 
+    -- Deal starting cards (and pilot tokens if playing Shy Pluto) for active players
     Sector1Deck = find_pile(getObjectFromGUID(SectorDecks[1]))
-    for key,value in ipairs(getSeatedPlayers()) do
+    for key, value in ipairs(getSeatedPlayers()) do
         if (isPlayerColor(value)) then
-            local PilotBag = getObjectFromGUID(ShyPlutoBag['Pilot'][value])
             Sector1Deck.takeObject({
                 position = Starters[value],
                 rotation = {0,180,0}
             })
+            local PilotBag = getObjectFromGUID(ShyPlutoBag['Pilot'][value])
             if (PilotBag != nil) then
                 PilotBag.takeObject({
                     position = {x=Starters[value][1]+3, y=Starters[value][2], z=Starters[value][3]},
@@ -571,16 +575,19 @@ function isPlayerColor(value)
     return isColor
 end
 
-function CameraViewClicked(player,value,id)
+function CameraViewClicked(player, value, id)
     player.lookAt(CameraStates[id])
 end
 
+-- Lua doesn't have a round function!
 function round(num, numDecimalPlaces)
     local mult = 10^(numDecimalPlaces or 0)
     return math.floor(num * mult + 0.5) / mult
 end
 
-function doSwap()
+-- Swap all cards in a sector with those from another sector
+function swapSectorCards()
+    -- The sectors that the two checkers are on will determine which to swap
     Checker1 = getObjectFromGUID('3630f7')
     Checker2 = getObjectFromGUID('a12ea2')
     local locOne = getSectorLocation(Checker1)
@@ -594,6 +601,8 @@ function doSwap()
         return
     end
     print('Swapping ', locOne[1], ' sectors ', locOne[2], ' and ', locTwo[2], '.')
+    
+    -- Return the checkers to the original location
     Checker1.setPositionSmooth({0.01, 1.12, -14.32})
     Checker2.setPositionSmooth({1.36, 1.12, -14.32})
     
@@ -605,19 +614,19 @@ function doSwap()
     local Position2 = Sector2.getPosition()
     local DeployPosition1 = Deploy1.getPosition()
     local DeployPosition2 = Deploy2.getPosition()
-    moveRight(Sector1, Position2[1])
-    moveRight(Sector2, Position1[1])
-    moveRight(Deploy1, Position2[1])
-    moveRight(Deploy2, Position1[1])
+    moveHorizontal(Sector1, Position2[1])
+    moveHorizontal(Sector2, Position1[1])
+    moveHorizontal(Deploy1, Position2[1])
+    moveHorizontal(Deploy2, Position1[1])
 end
 
-function moveRight(zone, rightPosition)
+function moveHorizontal(zone, xPosition)
     local objects = zone.getObjects()
     for _, object in ipairs(objects) do
         local type = object.tag
         if object.tag == "Card" or object.tag == "Deck" then
             local position = object.getPosition()
-            object.setPositionSmooth({rightPosition, position[2], position[3]})
+            object.setPositionSmooth({xPosition, position[2], position[3]})
         end
     end
 end
@@ -626,6 +635,7 @@ function getSectorLocation(obj)
     local position = obj.getPosition()
     local right = round(position[1],1)
     local rightIndex = 0
+    -- There are 24 x-positions the sectors can be in
     for k=1,24 do
         if (k < 13) then
             if (tostring(right) == tostring(round(CardPosition.Green.right + rightIncrements[k],1))) then
@@ -638,6 +648,7 @@ function getSectorLocation(obj)
         end
     end   
     
+    -- Determine the yPosition
     local upIndex = (round(position[3],0) + 23) / 12
     
     local color = ''
@@ -657,22 +668,7 @@ function getSectorLocation(obj)
     return {color, rightIndex}
 end
 
-function getRightIndex(rightPosition)
-    local t = 0
-    for k=1,24 do
-        if (k < 13) then
-            if (tostring(right) == tostring(round(CardPosition.Green.right + rightIncrements[k],1))) then
-                t = k
-            end
-        else 
-            if (tostring(right) == tostring(round(CardPosition.Purple.right + rightIncrements[k-12],1))) then
-                t = k
-            end
-        end
-    end
-    return t
-end
-
+-- Toggles expansions on/off
 function toggleOption(player, value, id, key, title)
     local label = ''
     local color = 'rgb(0.5,0.5,0.5)'
@@ -703,6 +699,7 @@ function shyPlutoToggle(player, value, id)
     toggleOption(player, value, id, 'haveShyPluto', 'Shy Pluto')
 end
 
+-- Sorts a table
 function spairs(t, order)
     -- collect the keys
     local keys = {}
@@ -726,34 +723,20 @@ function spairs(t, order)
     end
 end
 
-function find_pile(zone)
-    local objects = zone.getObjects()
-    local num_decks = 0
-    local deck = nil
-     for index, object in ipairs(objects) do
-        local type = object.tag
-        if (string.find(type, 'Deck') or string.find(type, 'Card')) then
-            num_decks = num_decks + 1
-            deck = object
-        end
-      end
-      if (num_decks==1) then
-        return deck
-      else
-        return nil
-      end
-end
-
+-- Deploy or undeploy a card from clicking the deploy button
 function deployRouting(sector, xpos, deployGuid, color, altClick)
     if (altClick == false) then deploy(sector, xpos, deployGuid, color)
     else undeploy(sector, xpos, deployGuid, color)
     end
 end
 
+-- Takes the card on the station, flips it upside down, and tucks it under the board
+-- and under the topmost deployed card of that sector
 function deploy(sector, sectorNumber, deployGuid, color, altClick)
     sectorNumber = sectorNumber - 1
     local cards = {}
     
+    -- Get the currently deployed cards
     local deployed = getObjectFromGUID(deployGuid)
     for index, card in ipairs(deployed.getObjects()) do
         local type = card.tag
@@ -762,14 +745,18 @@ function deploy(sector, sectorNumber, deployGuid, color, altClick)
         end
     end
     
+    -- Reposition all deployed cards, which will fix any misalignment if a card was
+    -- manually removed
     local deployedCount = 0;
     upSum = 0;
+    -- Loop through deployed cards in y-position order and deploy them
     for index, card in spairs(cards, function(t,a,b) return t[b].getPosition()[3] > t[a].getPosition()[3] end) do
         upSum = upSum + getDeployHeight(card.guid)
         deployCard(card, sectorNumber, index-1, upSum, color)
         deployedCount = deployedCount + 1
     end
     
+    -- Deploy the card in the station
     local foundCard = find_pile(sector)
     if foundCard != nil then
         upSum = upSum + getDeployHeight(foundCard.guid)
@@ -783,6 +770,7 @@ function getDeployHeight(guid)
     return 0.55
 end
 
+-- Move the topmost deployed card back to the station
 function undeploy(sector, xpos, deployGuid, color, altClick)
     local topPosition = nil
     local topCard = nil
@@ -808,6 +796,7 @@ function undeploy(sector, xpos, deployGuid, color, altClick)
     topCard.setRotationSmooth({0,180,0})
 end
 
+-- Move the station card to the topmost deployed spot
 function deployCard(card, xpos, ypos, upSum, color)
     card.setRotationSmooth({0,360,0})
     card.setLock(true)
@@ -817,6 +806,8 @@ function deployCard(card, xpos, ypos, upSum, color)
         card.setPosition({right, height, up})
 end
 
+-- Fill empty shy pluto spots by moving dice to the left, and then draw
+-- new dice to fill remaining spots
 function deployDice()
     if (resupplyInProgress[4] == true) then return end
 
@@ -854,26 +845,25 @@ function deployDice()
     end
 end
 
+-- Create all deploy functions since Tabletop Simulator doesn't support
+-- passing parameters into buttons
 for c=1,7 do
     for k=1,12 do
-        -- create a new global function
+        -- Create a new global function
         _G[Colors[c] .. 'Deploy' .. k] = function(obj, color, alt_click) 
             deployRouting(obj, k, DeploySections[Colors[c]][k], Colors[c], alt_click)
         end
     end
 end
 
-function ResupplySector1()
-    ResupplySector(1)
-end
-function ResupplySector2()
-    ResupplySector(2)
-end
-function ResupplySector3()
-    ResupplySector(3)
+for c=1,3 do
+    _G['resupplySector' .. c] = function()
+        resupplySector(c)
+    end
 end
 
-function ResupplySector(n)
+-- Deal cards to refill the marketplace
+function resupplySector(n)
     if (resupplyInProgress[n] == false) then
         
         resupplyInProgress[n] = true
@@ -905,6 +895,7 @@ function ResupplySector(n)
     end
 end
 
+-- Finds a deck or card in a zone
 function find_pile(zone)
     if (zone == nil) then return end
     local objects = zone.getObjects()
@@ -925,16 +916,17 @@ function find_pile(zone)
 end
 
 function onPlayerTurnEnd(color)
-    ResupplySector1()
-    ResupplySector2()
-    ResupplySector3()
+    resupplySector1()
+    resupplySector2()
+    resupplySector3()
     if (haveShyPluto) then
         deployDice()
         autoRollDice()
     end
 end
 
-function has_value (tab, val)
+-- Check if a table contains a value
+function has_value(tab, val)
     for index, value in ipairs(tab) do
         if value == val then
             return true
@@ -943,6 +935,7 @@ function has_value (tab, val)
     return false
 end
 
+-- Roll dice in auto-roll zones
 function autoRollDice()    
     for key, color in ipairs(getSeatedPlayers()) do
         if (isPlayerColor(color) == true) then
