@@ -1,0 +1,53 @@
+<!-- For camera views -->
+<Panel id="CamerasPanel" active="true" width="40" height="180" color="rgba(0, 0, 0, 0)"
+    rectAlignment="LowerRight" offsetXY="-15 65" returnToOriginalPositionWhenReleased="false" allowDragging="true">
+    <VerticalLayout preferredHeight="40" spacing="3">
+        <Button id="Multi" onClick="CameraViewClicked" color="rgba(0, 0, 0, 0)">
+            <Image image="MultiButton" />
+        </Button>
+        <Button id="Red" onClick="CameraViewClicked" color="rgba(0, 0, 0, 0)">
+            <Image image="RedButton" />
+        </Button>        
+        <Button id="Orange" onClick="CameraViewClicked" color="rgba(0, 0, 0, 0)">
+            <Image image="OrangeButton" />
+        </Button>
+        <Button id="Yellow" onClick="CameraViewClicked" color="rgba(0, 0, 0, 0)">
+            <Image image="YellowButton" />
+        </Button>
+        <Button id="Green" onClick="CameraViewClicked" color="rgba(0, 0, 0, 0)">
+            <Image image="GreenButton" />
+        </Button>
+        <Button id="Teal" onClick="CameraViewClicked" color="rgba(0, 0, 0, 0)">
+            <Image image="TealButton" />
+        </Button>
+        <Button id="Blue" onClick="CameraViewClicked" color="rgba(0, 0, 0, 0)">
+            <Image image="BlueButton" />
+        </Button>
+        <Button id="Purple" onClick="CameraViewClicked" color="rgba(0, 0, 0, 0)">
+            <Image id="Blue" image="PurpleButton" />
+        </Button>
+    </VerticalLayout>
+</Panel>
+
+<!-- For game configuration before starting -->
+<Panel id="StartPanel" active="true" width="250" height="240" rectAlignment="MiddleCenter" returnToOriginalPositionWhenReleased="false" allowDragging="true" color="rgba(1,1,1,0.9)">
+    <TableLayout autoCalculateHeight="true" cellBackgroundColor="clear">
+        <Row><Cell>
+            <Text fontSize="18">Everyone must select their player color before starting.</Text>
+        </Cell></Row>
+        <Row preferredHeight="40"><Cell>
+            <Button id="ShyPluto" onClick="shyPlutoToggle" color="rgb(0.5,0.5,0.5)" textColor="white" fontSize="20"  height="40" width="120">
+                Shy Pluto: Off
+            </Button>
+        </Cell></Row>
+        <Row preferredHeight="40"><Cell>
+            <Button id="Dreadnaught" onClick="dreadnaughtToggle" color="rgb(0.5,0.5,0.5)" textColor="white" fontSize="20"  height="40" width="120">Dreadnaught Pack: Off</Button>
+        </Cell></Row>
+        <Row preferredHeight="40"><Cell>
+            <Button id="Biodome" onClick="biodomeToggle" color="rgb(0.5,0.5,0.5)" textColor="white" fontSize="20"  height="40" width="120">Biodome: Off</Button>
+        </Cell></Row>
+        <Row preferredHeight="40"><Cell>
+            <Button id="Start" onClick="start" color="rgb(0.19,0.7,0.12)" textColor="white" fontSize="20"  height="40" width="120">Start Game</Button>
+        </Cell></Row>
+    </TableLayout>
+</Panel>
