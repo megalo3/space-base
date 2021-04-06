@@ -188,11 +188,6 @@ ShyPlutoBag = {
     }
 }
 
-haveBiodome = false
-haveDreadnaught = false
-haveShyPluto = false
-haveCommandStation = false
-gameStarted = false
 resupplyInProgress = {}
 resupplyInProgress[1] = false
 resupplyInProgress[2] = false
@@ -228,10 +223,14 @@ DiceTags = {
     'victory points'
 }
 
+startPlayerCard = nil
+gameLoaded = false
+
 function onLoad()
+    startPlayerCard = getObjectFromGUID('ede71b')
     math.randomseed(os.time())
     -- Set items uninteractable
-    for key,value in ipairs({
+    for key, value in ipairs({
             -- Player Boards
             'e58bea', '93553d', '2eaddb', 'fc21ad', 'a917cc', '0b40bb', '707903', 
             -- Table
@@ -243,7 +242,9 @@ function onLoad()
             -- Floor and stools
             'b1cad7', '5f9ba8', '28c93d'
         }) do
-        getObjectFromGUID(value).interactable = false
+        if (getObjectFromGUID(value) != nil) then
+            getObjectFromGUID(value).interactable = false
+        end
     end
     
     SwapButton = getObjectFromGUID('644a28')
@@ -307,6 +308,12 @@ function onLoad()
         font_color     = {1,1,1}
         
     })
+    
+    if (startPlayerCard.hasTag('started')) then
+        UI.hide('StartPanel')
+    end
+    
+    gameLoaded = true
 end
 
 function resetCurrency(button, color)
@@ -381,13 +388,16 @@ function start()
     addShyPluto()
     addBiodome()
     
+    -- Give the starter card "Started" tag to know on load if this is loading a saved game
+    startPlayerCard.addTag('started')
+    
     -- Wait for the decks to combine before shuffling and handing out cards
     Wait.time(startShuffleDeal, 0.1)
 end
 
 function addDreadnaught()
     dreadnaughtDeck = getObjectFromGUID('b7c897')
-    if (haveDreadnaught) then
+    if (startPlayerCard.hasTag('haveDreadnaught')) then
         print('Adding Dreadnaught.')
         dreadnaughtDeck.setPosition({-3.81, 1.22, -0.49})
     else
@@ -400,7 +410,7 @@ function addShyPluto()
     shyPlutoSector1 = getObjectFromGUID('fc7e02')
     shyPlutoSector2 = getObjectFromGUID('2a65b9')
     shyPlutoSector3 = getObjectFromGUID('32d0c5')
-    if (haveShyPluto) then
+    if (startPlayerCard.hasTag('haveShyPluto')) then
         print('Adding Shy Pluto.')
         shyPlutoSector1.setPosition({-3.83, 1.22, 3.06})
         shyPlutoSector2.setPosition({-3.81, 1.22, -0.49})
@@ -452,7 +462,9 @@ function addShyPluto()
             '4f72e5', '460a76',
             '4d7108', '7c2bed',
             'bf288d', 'd86ace',
-            '255f76', '7f8d0c'
+            '255f76', '7f8d0c',
+            -- Game box
+            '1b8a94'
         }
         
         for key,value in ipairs(removals) do
@@ -466,7 +478,7 @@ function addBiodome()
     biodomeSector2 = getObjectFromGUID('347c84')
     biodomeSector3 = getObjectFromGUID('408a70')
     biodomeColonyCards = getObjectFromGUID('c6d40a')
-    if (haveBiodome) then
+    if (startPlayerCard.hasTag('haveBiodome')) then
         print('Adding Biodome Sector Cards.')
         biodomeSector1.setPosition({-3.83, 1.22, 3.06})
         biodomeSector2.setPosition({-3.81, 1.22, -0.49})
@@ -482,6 +494,8 @@ function addBiodome()
         checkDestruct(biodomeSector2)
         checkDestruct(biodomeSector3)
         checkDestruct(biodomeColonyCards)
+        -- Biodome instructions
+        checkDestruct(getObjectFromGUID('595005'))
     end
 end
 
@@ -603,8 +617,8 @@ function swapSectorCards()
     print('Swapping ', locOne[1], ' sectors ', locOne[2], ' and ', locTwo[2], '.')
     
     -- Return the checkers to the original location
-    Checker1.setPositionSmooth({0.01, 1.12, -14.32})
-    Checker2.setPositionSmooth({1.36, 1.12, -14.32})
+    Checker1.setPositionSmooth({-0.46, 1.12, -14.32})
+    Checker2.setPositionSmooth({0.89, 1.12, -14.32})
     
     local Sector1 = getObjectFromGUID(PlayerBoards[locOne[1]][locOne[2]])
     local Sector2 = getObjectFromGUID(PlayerBoards[locOne[1]][locTwo[2]])
@@ -672,11 +686,12 @@ end
 function toggleOption(player, value, id, key, title)
     local label = ''
     local color = 'rgb(0.5,0.5,0.5)'
-    if _G[key] then
-        _G[key] = false
+    
+    if startPlayerCard.hasTag(key) then
+        startPlayerCard.removeTag(key)
         label = title .. ": Off"
     else
-        _G[key] = true
+        startPlayerCard.addTag(key)
         label = title .. ": On"
         color = 'rgb(0.2,0.52,1)'
     end
@@ -833,7 +848,7 @@ function deployDice()
     
     local redDiceBag = getObjectFromGUID(ShyPlutoBag['Red'])
     redDiceBag.shuffle()
-    
+
     if (lastEmptyPosition < 7) then
         for k=lastEmptyPosition, 6 do
             redDiceBag.takeObject({
@@ -915,11 +930,17 @@ function find_pile(zone)
     end
 end
 
+-- The game always starts on the Red player's turn. If there is no Red player,
+-- the turn automatically switches to the next player. If a Red player exists,
+-- onPlayerTurnEnd will not trigger.
 function onPlayerTurnEnd(color)
+    if (gameLoaded == false) then return end
     resupplySector1()
     resupplySector2()
     resupplySector3()
-    if (haveShyPluto) then
+    -- Player turn end can be called before objects are loaded
+    local redDiceBag = getObjectFromGUID(ShyPlutoBag['Red'])
+    if (startPlayerCard.hasTag('haveShyPluto') and redDiceBag != nil) then
         deployDice()
         autoRollDice()
     end
