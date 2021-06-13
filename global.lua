@@ -475,8 +475,8 @@ end
 
 function addBiodome()
     biodomeSector1 = getObjectFromGUID('3a8b4d')
-    biodomeSector2 = getObjectFromGUID('347c84')
-    biodomeSector3 = getObjectFromGUID('408a70')
+    biodomeSector2 = getObjectFromGUID('8fc6fd')
+    biodomeSector3 = getObjectFromGUID('d02425')
     biodomeColonyCards = getObjectFromGUID('c6d40a')
     if (startPlayerCard.hasTag('haveBiodome')) then
         print('Adding Biodome Sector Cards.')
