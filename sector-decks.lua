@@ -16,6 +16,9 @@ Sectors[2] = {'f2a756', 'dcbd86', '1aae77', 'd39780', 'dd4e5a', '44ebd0'}
 Sectors[3] = {'abf34d', '3c1ec6', '3454b5', 'a406ac', 'ad25a1', '6d85cc'}
 Sectors[4] = {'dc07d3', 'eedc3f', 'ebe528'}
 
+SectorX = {-2.19, -0.76, 0.67, 2.10, 3.53, 4.96}
+SectorY = {3.05, -0.49, -3.89, -7.29}
+
 resupplyInProgress = {}
 resupplyInProgress[1] = false
 resupplyInProgress[2] = false
@@ -67,22 +70,23 @@ function resupplySector(n)
         local deck = SectorDecks[n]
         local topCard = Utility.call("find_pile", deck)
 
-        local checkSectors = {}
+        checkSectors = {}
         local total = 6
         if (n == 4) then total = 3 end
         for k=1,total do
-            checkSectors[k] = Utility.call("find_pile", getObjectFromGUID(Sectors[n][k]))
-            -- print(getObjectFromGUID(Sectors[n][k]))
-            -- print(Utility.call("find_pile", getObjectFromGUID(Sectors[n][k])))
-           -- print(checkSectors[k])
+            local foundCard = Utility.call("find_pile", getObjectFromGUID(Sectors[n][k]))
+            if (foundCard ~= nil) then
+                table.insert(checkSectors, foundCard)
+                foundCard.setPositionSmooth({SectorX[#checkSectors], 1, SectorY[n]})
+            end
+            -- checkSectors[k] = Utility.call("find_pile", getObjectFromGUID(Sectors[n][k]))
         end
-        local sectorX = {-2.19, -0.76, 0.67, 2.10, 3.53, 4.96}
-        local sectorY = {3.05, -0.49, -3.89, -7.29}
+        
 
         for k=1,total do
             if (not checkSectors[k]) then
                 if (topCard != nil) then
-                    topCard.takeObject({flip=true, position = {sectorX[k], 1, sectorY[n]}})
+                    topCard.takeObject({flip=true, position = {SectorX[k], 1, SectorY[n]}})
                     for _, obj in ipairs(deck.getObjects()) do
                         if obj.tag == "Card" then
                             topCard.flip()
