@@ -75,13 +75,16 @@ function resupplySector(n)
         if (n == 4) then total = 3 end
         for k=1,total do
             local foundCard = Utility.call("find_pile", getObjectFromGUID(Sectors[n][k]))
+            local foundToken = Utility.call("find_token", getObjectFromGUID(Sectors[n][k]))
             if (foundCard ~= nil) then
                 table.insert(checkSectors, foundCard)
-                foundCard.setPositionSmooth({SectorX[#checkSectors], 1, SectorY[n]})
+                local position = {SectorX[#checkSectors], 1, SectorY[n]}
+                foundCard.setPositionSmooth(position)
+                if (foundToken ~= nil) then
+                    foundToken.setPositionSmooth(position)
+                end
             end
-            -- checkSectors[k] = Utility.call("find_pile", getObjectFromGUID(Sectors[n][k]))
         end
-        
 
         for k=1,total do
             if (not checkSectors[k]) then
@@ -96,6 +99,31 @@ function resupplySector(n)
                     end
                 end
             end
+        end
+    end
+end
+
+function supplyPilotToken()
+    print('Supplying patrol ship')
+    local order = {
+        Sectors[3][1], Sectors[2][1], Sectors[1][1],
+        Sectors[3][2], Sectors[2][2], Sectors[1][2],
+        Sectors[3][3], Sectors[2][3], Sectors[1][3],
+        Sectors[3][4], Sectors[2][4], Sectors[1][4],
+        Sectors[3][5], Sectors[2][5], Sectors[1][5],
+        Sectors[3][6], Sectors[2][6], Sectors[1][6]
+    }
+    local pilotBag = getObjectFromGUID(Expansions.getVar('Proxima')['PilotBag'])
+    for n=1,18 do
+        local zone = getObjectFromGUID(order[n])
+        local token = Utility.call('find_token', zone)
+        if (token == nil) then
+            pilotBag.takeObject({
+                position = zone.getPosition(),
+                rotation = {x=0, y=180, z=0},
+                smooth = true
+            })
+            return
         end
     end
 end

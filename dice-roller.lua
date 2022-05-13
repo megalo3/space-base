@@ -1,3 +1,4 @@
+SectorDecks = nil
 --Clicker Roller Universal      by: MrStump
 setting = {print={}} --Don't edit this line
 
@@ -56,6 +57,8 @@ function onSave()
 end
 
 function onload(saved_data)
+    SectorDecks = Global.getVar('SectorDecks')
+    
     if saved_data ~= "" then
         --Remove any old dice from the table
         local loaded_data = JSON.decode(saved_data)
@@ -105,6 +108,28 @@ function spawnDie(color)
     updateRollTimers(color)
 end
 
+function rollPilot()
+    local die = getObjectFromGUID('7a3f02')
+    if (die == nil) then return end
+    die.randomize() -- Roll a die
+
+    Wait.condition(
+        function() -- Executed after our condition is met
+            if die.isDestroyed() then
+                print("Die was destroyed before it came to rest.")
+            else
+                if (die.getRotationValue() == 1) then
+                    SectorDecks.call('supplyPilotToken')
+                end
+            end
+        end,
+
+        function() -- Condition function
+            return die.isDestroyed() or die.resting
+        end
+    )
+end
+
 --Spawn dice for rolling
 function click_roll(_, color)
     --Dice spam protection check
@@ -112,7 +137,8 @@ function click_roll(_, color)
     if setting.maxCount > 0 and #spawnedDice >= setting.maxCount then
         denyRoll = true
     end
-    if rollInProgress==nil and denyRoll==false and anyRollInProgress(color)==false then   
+    if rollInProgress==nil and denyRoll==false and anyRollInProgress(color)==false then  
+        rollPilot()
         spawnDie(color)
         spawnDie(color)
 

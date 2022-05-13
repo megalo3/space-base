@@ -22,7 +22,8 @@ Proxima = {
     UpgradeDeck = 'fce0af',
     Colony = 'bb983f',
     OrangeDiceBag = '75b043',
-    ShipDie = '7a3f02'
+    ShipDie = '7a3f02',
+    PilotBag = '5c53c2'
 }
 AutoRoll = {
     Red = '5acb43', 
@@ -295,6 +296,7 @@ function removeUnusedExpansions()
             Proxima['OrangeDiceBag'],
             Proxima['Colony'],
             Proxima['ShipDie'],
+            Proxima['PilotBag'],
             -- script zone
             '84e601',
             -- Sector 13

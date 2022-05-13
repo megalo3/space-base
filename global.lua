@@ -292,7 +292,9 @@ function onLoad()
 end
 
 function onObjectDrop(colorName, obj)
-    LastDropped[colorName] = obj.guid
+    if (obj.type == 'Card') then
+        LastDropped[colorName] = obj.guid
+    end
 end
 
 function onObjectEnterScriptingZone(zone, card)
@@ -474,8 +476,8 @@ end
 function moveHorizontal(zone, xPosition)
     local objects = zone.getObjects()
     for _, object in ipairs(objects) do
-        local type = object.tag
-        if object.tag == "Card" or object.tag == "Deck" then
+        local type = object.type
+        if object.type == "Card" or object.type == "Deck" then
             local position = object.getPosition()
             object.setPositionSmooth({xPosition, position[2], position[3]})
         end
@@ -619,7 +621,7 @@ function returnUnpurchasedCards()
             local zone = getObjectFromGUID(DiscardZones[color])
             local objects = zone.getObjects()
             for index, object in ipairs(objects) do
-                local type = object.tag
+                local type = object.type
                 if (string.find(type, 'Deck') or string.find(type, 'Card')) then
                     if (object.hasTag('sector 1')) then
                         sector1.putObject(object)
