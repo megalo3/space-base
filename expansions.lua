@@ -23,7 +23,8 @@ Proxima = {
     Colony = 'bb983f',
     OrangeDiceBag = '75b043',
     ShipDie = '7a3f02',
-    PilotBag = '5c53c2'
+    PilotBag = '5c53c2',
+    HelpText = '21ef47'
 }
 AutoRoll = {
     Red = '5acb43', 
@@ -297,6 +298,7 @@ function removeUnusedExpansions()
             Proxima['Colony'],
             Proxima['ShipDie'],
             Proxima['PilotBag'],
+            Proxima['HelpText'],
             -- script zone
             '84e601',
             -- Sector 13
