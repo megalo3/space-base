@@ -322,8 +322,7 @@ function onObjectEnterScriptingZone(zone, card)
                     local right = CardPosition[playerColor].right + rightIncrements[sectorNumber]
                     card.setPositionSmooth({right, 2, CardPosition[playerColor].orig})
                     card.setRotationSmooth({0,180,0})
-                    
-                    Wait.time(deploy(sectorPileObject, sectorNumber, deployGuid, playerColor, false), .3)
+                    Wait.time(function() deploy(sectorPileObject, sectorNumber, deployGuid, playerColor) end, 1.3)
                     return
                 end
                 
@@ -643,7 +642,7 @@ end
 
 -- Takes the card on the station, flips it upside down, and tucks it under the board
 -- and under the topmost deployed card of that sector
-function deploy(sector, sectorNumber, deployGuid, color, altClick)
+function deploy(sector, sectorNumber, deployGuid, color)
     -- if sectorNumber == 13 then return end
     sectorNumber = sectorNumber - 1
     local cards = {}
@@ -672,10 +671,10 @@ function deploy(sector, sectorNumber, deployGuid, color, altClick)
         deployCard(card, sectorNumber, index-1, upSum, color, flip)
         deployedCount = deployedCount + 1
     end
-    
     -- Deploy the card in the station
     local foundCard = Utility.call('find_pile', sector)
-    if foundCard != nil then
+    if (foundCard != nil) then
+        -- Don't deploy the upgrade boards even though they are technically cards
         upSum = upSum + getDeployHeight(foundCard.guid)
         deployCard(foundCard, sectorNumber, deployedCount, upSum, color, flip)
     end
@@ -689,7 +688,7 @@ function getDeployHeight(guid)
 end
 
 -- Move the topmost deployed card back to the station
-function undeploy(sector, xpos, deployGuid, color, altClick)
+function undeploy(sector, xpos, deployGuid, color)
     local topPosition = nil
     local topCard = nil
     
@@ -723,7 +722,7 @@ function deployCard(card, xpos, ypos, upSum, color, flip)
     local right = CardPosition[color].right + rightIncrements[xpos+1]
     local up = CardPosition[color].up + upSum
     local height = heightFirst + (heightIncrement*(ypos))
-        card.setPosition({right, height, up})
+        card.setPositionSmooth({right, height, up})
 end
 
 -- Fill empty shy pluto spots by moving dice to the left, and then draw

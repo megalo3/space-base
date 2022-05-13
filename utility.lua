@@ -12,11 +12,13 @@ end
 function find_pile(zone)
     if (zone == nil) then return end
     local objects = zone.getObjects()
+    -- print('num objs')
+    -- print(#objects)
     local num_decks = 0
     local deck = nil
     for index, object in ipairs(objects) do
         local type = object.tag
-        if (string.find(type, 'Deck') or string.find(type, 'Card')) then
+        if ((string.find(type, 'Deck') or string.find(type, 'Card')) and not object.hasTag('upgrade board')) then
             num_decks = num_decks + 1
             deck = object
         end

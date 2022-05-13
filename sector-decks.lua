@@ -67,23 +67,26 @@ function resupplySector(n)
         local deck = SectorDecks[n]
         local topCard = Utility.call("find_pile", deck)
 
-        local sectors = {}
+        local checkSectors = {}
         local total = 6
         if (n == 4) then total = 3 end
         for k=1,total do
-            sectors[k] = Utility.call("find_pile", getObjectFromGUID(Sectors[n][k]))
+            checkSectors[k] = Utility.call("find_pile", getObjectFromGUID(Sectors[n][k]))
+            -- print(getObjectFromGUID(Sectors[n][k]))
+            -- print(Utility.call("find_pile", getObjectFromGUID(Sectors[n][k])))
+           -- print(checkSectors[k])
         end
         local sectorX = {-2.19, -0.76, 0.67, 2.10, 3.53, 4.96}
         local sectorY = {3.05, -0.49, -3.89, -7.29}
 
         for k=1,total do
-            if (not sectors[k]) then
+            if (not checkSectors[k]) then
                 if (topCard != nil) then
                     topCard.takeObject({flip=true, position = {sectorX[k], 1, sectorY[n]}})
                     for _, obj in ipairs(deck.getObjects()) do
                         if obj.tag == "Card" then
                             topCard.flip()
-                            topCard.setPositionSmooth(sectors[k].getPosition())
+                            topCard.setPositionSmooth(checkSectors[k].getPosition())
                             break
                         end
                     end
