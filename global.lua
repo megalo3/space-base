@@ -808,13 +808,15 @@ function autoRollDice()
             diceValues['bonus roll'] = 0
             diceValues['victory points'] = 0
             local dice = zone.getObjects()
+            local filteredDice = {}
             for _, die in ipairs(dice) do
-                if die.hasTag('pluto') then
+                if ((die.hasTag('pluto') or die.hasTag('proxima')) and die.tag == 'Dice') then
+                    table.insert(filteredDice, die)
                     die.roll()
                 end
             end
             
-            monitorDice(color, dice)
+            monitorDice(color, filteredDice)
         end
     end
 end
@@ -840,7 +842,7 @@ function monitorDice(color, dice)
         end
 
         if (message ~= '') then
-            broadcastToColor(message, color, stringColorToRGB(color))
+            printToAll(color .. ' player: ' .. message, stringColorToRGB(color))
         end
         return 1
     end
@@ -857,7 +859,7 @@ function sumDiceValues(dice)
             if (tonumber(rotationValue) > 0) then
                 -- Don't count "pluto" as a tag
                 for _, tag in ipairs(die.getTags()) do
-                    if (tag ~= 'pluto') then
+                    if (tag ~= 'pluto' and tag ~= 'proxima') then
                         -- If this tag hasn't be set, it needs to be defaulted to 0
                         if (diceValues[tag] == nil) then diceValues[tag] = 0 end
                         diceValues[tag] = diceValues[tag] + die.getRotationValue()

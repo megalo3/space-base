@@ -22,7 +22,7 @@ Proxima = {
     UpgradeDeck = 'fce0af',
     Colony = 'bb983f',
     OrangeDiceBag = '75b043',
-    
+    ShipDie = '7a3f02'
 }
 AutoRoll = {
     Red = '5acb43', 
@@ -294,10 +294,9 @@ function removeUnusedExpansions()
             Proxima['UpgradeDeck'],
             Proxima['OrangeDiceBag'],
             Proxima['Colony'],
+            Proxima['ShipDie'],
             -- script zone
-             '84e601',
-            -- ship di
-            '7a3f02',
+            '84e601',
             -- Sector 13
             '49fa5b', '611b6d', '865e5f', '865e5f', '645b55',
             'bdc915', 'a0696f', '8aa3d6', 'd5f2f4', '06c771',
@@ -310,7 +309,6 @@ function removeUnusedExpansions()
             '4f95ef', '3b4252', '85f58b', 'd382e6'
         })
     end
-    
 end
 
 function removeMultiple(removals)
