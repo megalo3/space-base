@@ -243,6 +243,10 @@ function removeUnusedExpansions()
         })
     end
     
+    if (StartPlayerCard.hasTag('haveTerraProxima') == true and StartPlayerCard.hasTag('haveShyPluto') == false) then
+        removeMultiple({ShyPluto['RedBag']})
+    end
+    
     -- Delete shy pluto mining station if neither proxima or pluto
     if (StartPlayerCard.hasTag('haveTerraProxima') == false and StartPlayerCard.hasTag('haveShyPluto') == false) then
         removeMultiple({
