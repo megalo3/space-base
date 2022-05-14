@@ -215,26 +215,6 @@ ShyPlutoButton = '3c5547'
 
 resupplyInProgress = false
 
-AutoRollZones = {
-    Red = '9e1e40', 
-    Orange = '4de647',
-    Yellow = 'f90ed4',
-    Green = 'c22c7b',
-    Blue = '31f9ef',
-    Teal = '340eb2',
-    Purple = 'f44f1f'
-}
-
-DiceTags = {
-    'bonus roll',
-    'charge',
-    'credits',
-    'income',
-    'pluto',
-    'ship',
-    'victory points',
-    'proxima'
-}
 
 startPlayerCard = nil
 gameLoaded = false
@@ -790,87 +770,8 @@ function onPlayerTurnEnd(color)
         local miningDiceBag = Expansions.call('getMiningDiceBag')
         if (miningDiceBag != nil) then
             deployDice()
-            autoRollDice()
         end
     end
-end
-
--- Roll dice in auto-roll zones
-function autoRollDice()    
-    for key, color in ipairs(getSeatedPlayers()) do
-        if (Utility.call('isPlayerColor', color) == true) then
-        
-            local zone = getObjectFromGUID(AutoRollZones[color])
-            local diceValues = {
-                charge = 0,
-                credits = 0,
-                income = 0,
-                ship = 0
-            }
-            diceValues['bonus roll'] = 0
-            diceValues['victory points'] = 0
-            local dice = zone.getObjects()
-            local filteredDice = {}
-            for _, die in ipairs(dice) do
-                if ((die.hasTag('pluto') or die.hasTag('proxima')) and die.tag == 'Dice') then
-                    table.insert(filteredDice, die)
-                    die.roll()
-                end
-            end
-            
-            monitorDice(color, filteredDice)
-        end
-    end
-end
-
---Monitors dice to come to rest
-function monitorDice(color, dice)
-    function coroutine_monitorDice()
-        repeat
-            local allRest = true
-            for _, die in ipairs(dice) do
-                if die ~= nil and die.resting == false then
-                    allRest = false
-                end
-            end
-            coroutine.yield(0)
-        until allRest == true 
-
-        local diceValues = sumDiceValues(dice)
-        local message = '';
-        for key, value in pairs(diceValues) do
-            if (message ~= '') then message = message .. ', ' end
-            message = message .. value .. ' ' .. key
-        end
-
-        if (message ~= '') then
-            printToAll(color .. ' player: ' .. message, stringColorToRGB(color))
-        end
-        return 1
-    end
-    startLuaCoroutine(self, "coroutine_monitorDice")
-end
-
-function sumDiceValues(dice)
-    local diceValues = {}
-    for _, die in ipairs(dice) do
-        -- Only dice have a rotation value
-        if (die.tag == 'Dice') then
-            local rotationValue = die.getRotationValue()
-            -- Don't show any values that are 0
-            if (tonumber(rotationValue) > 0) then
-                -- Don't count "pluto" as a tag
-                for _, tag in ipairs(die.getTags()) do
-                    if (tag ~= 'pluto' and tag ~= 'proxima') then
-                        -- If this tag hasn't be set, it needs to be defaulted to 0
-                        if (diceValues[tag] == nil) then diceValues[tag] = 0 end
-                        diceValues[tag] = diceValues[tag] + die.getRotationValue()
-                    end
-                end
-            end
-        end
-    end
-    return diceValues;
 end
 
 -- Sorts a table
