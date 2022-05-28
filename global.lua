@@ -165,7 +165,8 @@ DiscardZones = {
     Teal = '7cd0b3'
 }
 
-Sectors = {'d1d5db', 'acf19a', '1fd001'}
+-- Actual decks
+Sectors = {'0124ec', 'e5c908', '0ed9c0'}
 
 LastDropped = {
     Red = {},

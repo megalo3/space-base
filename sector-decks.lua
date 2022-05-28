@@ -1,7 +1,7 @@
 Utility = nil
 Expansions = nil
 
-SectorDecks = {self, getObjectFromGUID('9f6e2d'), getObjectFromGUID('709338'), getObjectFromGUID('84e601')}
+SectorScriptZones = {self, getObjectFromGUID('9f6e2d'), getObjectFromGUID('709338'), getObjectFromGUID('84e601')}
 
 SectorDeckColors = {
     {0, 1, 0},
@@ -30,7 +30,7 @@ function onLoad()
     Expansions = Global.getVar('Expansions')
     
     for k=1,4 do
-        SectorDecks[k].createButton({
+        SectorScriptZones[k].createButton({
             click_function = "resupplySector" .. k,
             function_owner = self,
             label          = "Resupply",
@@ -67,7 +67,7 @@ function resupplySector(n)
         resupplyInProgress[n] = true
         Wait.time(function() resupplyInProgress[n] = false end, 2)
         
-        local deck = SectorDecks[n]
+        local deck = SectorScriptZones[n]
         local topCard = Utility.call("find_pile", deck)
 
         checkSectors = {}
@@ -132,7 +132,7 @@ function shuffleSectorDecks()
     local total = 3
     if (haveTerraProxima()) then total = 4 end
     for k=1,total do
-        deck = Utility.call("find_pile", SectorDecks[k])
+        deck = Utility.call("find_pile", SectorScriptZones[k])
         deck.shuffle()
     end
 end
