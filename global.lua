@@ -183,7 +183,11 @@ heightFirst = 1.17
 rightIncrements = {0, 1.42, 2.82, 4.21, 5.95, 7.35, 8.74, 10.14, 11.87, 13.27, 14.66, 16.07, 18.19}
 
 TallDeployments = {'c08c9b', '5b4153', 'e2a4c6', 'c572af', 'b0e8f8', '1394ec', '07b1d1', '3e70aa', 'ed5be4'}
-TallerDeployments = {'11d1fc', 'f0d126', 'ce3512', 'd1d0ea', '66ac96', '1bc92b', '8fadea', '3a81fe', '65d15a', '233671', '26f271', '1aa4c6', 'eb14a4', 'd0a0ae', '3a3ad8', 'c17f91', 'e540c8', '5aa245', '5aa245', '52d0f8', 'e27613' }
+TallerDeployments = {'11d1fc', 'f0d126', 'ce3512', 'd1d0ea', '66ac96', '1bc92b', '8fadea', '3a81fe', '65d15a', '233671', '26f271', '1aa4c6', 'eb14a4', 'd0a0ae', '3a3ad8', 'c17f91', 'e540c8', '5aa245', '5aa245', '52d0f8', 'e27613',
+-- 6/7 player start cards
+'65d15a', 'd1d0ea', '11d1fc', 'eb14a4', '3a81fe', '66ac96', '233671', '1aa4c6', 
+'8fadea', '1bc92b', 'ce3512', 'd0a0ae', 'f0d126', '26f271'
+ }
 Tall2Deployments = {'36ddd9', '82370d', '71c3e0', 'a8cb0f', '4cde5d', 'f1df7e', '8669dd', 'd02079', '5c9d9b', '80ce3d', 'dbb1b2', '734b3c'}
 
 CardPosition = {
@@ -332,6 +336,16 @@ function start()
     
     -- Give the starter card "Started" tag to know on load if this is loading a saved game
     startPlayerCard.addTag('started')
+    
+    -- If a 6 or 7 player game, give each player a sector 7 and 8 McCaffery Monitor-Relay Class Craft
+    if (#Player.getPlayers() > 5) then
+        for _, player in ipairs(Player.getPlayers()) do
+            local card7 = Utility.call('getTopCard', getObjectFromGUID('6b7b2c'))
+            local card8 = Utility.call('getTopCard', getObjectFromGUID('dd25cd'))
+            deployCard(card7, 6, 0, getDeployHeight(card7.guid), player.color, true)
+            deployCard(card8, 7, 0, getDeployHeight(card8.guid), player.color, true)
+        end
+    end
     
     -- Shuffle the sector decks
     SectorDecks.call("shuffleSectorDecks")
@@ -626,7 +640,6 @@ end
 -- Takes the card on the station, flips it upside down, and tucks it under the board
 -- and under the topmost deployed card of that sector
 function deploy(sector, sectorNumber, deployGuid, color)
-    -- if sectorNumber == 13 then return end
     sectorNumber = sectorNumber - 1
     local cards = {}
     

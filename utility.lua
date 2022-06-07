@@ -28,6 +28,17 @@ function find_pile(zone)
     end
 end
 
+-- Gets the top card in a zone
+function getTopCard(zone)
+    local deckOrCard = find_pile(zone)
+    if (string.find(deckOrCard.type, 'Deck')) then
+        return deckOrCard.takeObject()
+    end
+    if (string.find(deckOrCard.type, 'Card')) then
+        return deckOrCard
+    end
+end
+
 -- Finds a token in a zone
 function find_token(zone)
     if (zone == nil) then return end
