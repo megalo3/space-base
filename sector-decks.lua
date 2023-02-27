@@ -30,18 +30,20 @@ function onLoad()
     Expansions = Global.getVar('Expansions')
     
     for k=1,4 do
-        SectorScriptZones[k].createButton({
-            click_function = "resupplySector" .. k,
-            function_owner = self,
-            label          = "Resupply",
-            position       = {0,0.4,-0.35},
-            rotation       = {0,180,0},
-            width          = 500,
-            height         = 20,
-            font_size      = 100,
-            color          = {0, 0, 0},
-            font_color     = SectorDeckColors[k]
-        })
+        if (SectorScriptZones[k] != nil) then
+            SectorScriptZones[k].createButton({
+                click_function = "resupplySector" .. k,
+                function_owner = self,
+                label          = "Resupply",
+                position       = {0,0.4,-0.35},
+                rotation       = {0,180,0},
+                width          = 500,
+                height         = 20,
+                font_size      = 100,
+                color          = {0, 0, 0},
+                font_color     = SectorDeckColors[k]
+            })
+        end
     end
 end
 

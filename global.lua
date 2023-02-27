@@ -220,7 +220,6 @@ ShyPlutoButton = '3c5547'
 
 resupplyInProgress = false
 
-
 startPlayerCard = nil
 gameLoaded = false
 SectorDecks = nil
@@ -254,18 +253,21 @@ function onLoad()
     
     for c=1,7 do
         for k=1,13 do
-            getObjectFromGUID(PlayerBoards[Colors[c]][k]).createButton({
-                click_function = Colors[c] .. "Deploy" .. k, 
-                function_owner = Global,
-                label          = "Deploy",
-                position       = {0.05,-0.15,1.25},
-                rotation       = {0,180,0},
-                width          = 300,
-                height         = 200,
-                font_size      = 70,
-                color          = {0, 0, 0},
-                font_color     = {1, 1, 1},
-            })
+            local playerBoardSector = getObjectFromGUID(PlayerBoards[Colors[c]][k]);
+            if (playerBoardSector != nil) then
+                playerBoardSector.createButton({
+                    click_function = Colors[c] .. "Deploy" .. k, 
+                    function_owner = Global,
+                    label          = "Deploy",
+                    position       = {0.05,-0.15,1.25},
+                    rotation       = {0,180,0},
+                    width          = 300,
+                    height         = 200,
+                    font_size      = 70,
+                    color          = {0, 0, 0},
+                    font_color     = {1, 1, 1},
+                })
+            end
         end
     end
     
@@ -307,7 +309,7 @@ function onObjectEnterScriptingZone(zone, card)
                 -- We want to deploy a sector 13 card immediately
                 if (sectorNumber == 13) then
                     local right = CardPosition[playerColor].right + rightIncrements[sectorNumber]
-                    card.setPositionSmooth({right, 2, CardPosition[playerColor].orig})
+                    card.setPositionSmooth({right, 2, CardPosition[playerColor].orig}, false, false)
                     card.setRotationSmooth({0,180,0})
                     Wait.time(function() deploy(sectorPileObject, sectorNumber, deployGuid, playerColor) end, 1.3)
                     return
@@ -316,7 +318,7 @@ function onObjectEnterScriptingZone(zone, card)
                 deploy(sectorPileObject, sectorNumber, deployGuid, playerColor, false)
                 
                 local right = CardPosition[playerColor].right + rightIncrements[sectorNumber]
-                card.setPositionSmooth({right, 2, CardPosition[playerColor].orig})
+                card.setPositionSmooth({right, 2, CardPosition[playerColor].orig}, false, false)
                 card.setRotationSmooth({0,180,0})
                 
             end
@@ -342,8 +344,8 @@ function start()
         for _, player in ipairs(Player.getPlayers()) do
             local card7 = Utility.call('getTopCard', getObjectFromGUID('6b7b2c'))
             local card8 = Utility.call('getTopCard', getObjectFromGUID('dd25cd'))
-            deployCard(card7, 6, 0, getDeployHeight(card7.guid), player.color, true)
-            deployCard(card8, 7, 0, getDeployHeight(card8.guid), player.color, true)
+            deployCard(card7, 6, 0, getDeployHeight(card7.guid), player.color, true, false)
+            deployCard(card8, 7, 0, getDeployHeight(card8.guid), player.color, true, false)
         end
     end
     
@@ -451,8 +453,8 @@ function swapSectorCards()
     print('Swapping ', locOne[1], ' sectors ', locOne[2], ' and ', locTwo[2], '.')
     
     -- Return the checkers to the original location
-    Checker1.setPositionSmooth({-0.46, 1.12, -14.32})
-    Checker2.setPositionSmooth({0.89, 1.12, -14.32})
+    Checker1.setPositionSmooth({-0.46, 1.12, -14.32}, false, false)
+    Checker2.setPositionSmooth({0.89, 1.12, -14.32}, false, false)
     
     local Sector1 = getObjectFromGUID(PlayerBoards[locOne[1]][locOne[2]])
     local Sector2 = getObjectFromGUID(PlayerBoards[locOne[1]][locTwo[2]])
@@ -644,8 +646,8 @@ function deploy(sector, sectorNumber, deployGuid, color)
     local cards = {}
     
     -- Get the currently deployed cards
-    local deployed = getObjectFromGUID(deployGuid)
-    for index, card in ipairs(deployed.getObjects()) do
+    local deployedZone = getObjectFromGUID(deployGuid)
+    for index, card in ipairs(deployedZone.getObjects()) do
         local type = card.tag
         if (string.find(type, 'Deck') or string.find(type, 'Card')) then
             table.insert(cards, card)
@@ -664,15 +666,16 @@ function deploy(sector, sectorNumber, deployGuid, color)
     -- Loop through deployed cards in y-position order and deploy them
     for index, card in spairs(cards, function(t,a,b) return t[b].getPosition()[3] > t[a].getPosition()[3] end) do
         upSum = upSum + getDeployHeight(card.guid)
-        deployCard(card, sectorNumber, index-1, upSum, color, flip)
+        deployCard(card, sectorNumber, index-1, upSum, color, flip, false)
         deployedCount = deployedCount + 1
     end
     -- Deploy the card in the station
     local foundCard = Utility.call('find_pile', sector)
+    
     if (foundCard != nil) then
         -- Don't deploy the upgrade boards even though they are technically cards
         upSum = upSum + getDeployHeight(foundCard.guid)
-        deployCard(foundCard, sectorNumber, deployedCount, upSum, color, flip)
+        deployCard(foundCard, sectorNumber, deployedCount, upSum, color, flip, true)
     end
 end
 
@@ -705,20 +708,84 @@ function undeploy(sector, xpos, deployGuid, color)
     if (topCard == nil) then return end
     topCard.setLock(false)
     local topCardPosition = topCard.getPosition()
-    topCard.setPositionSmooth({topCardPosition[1], 1.23, CardPosition[color].orig})
-    topCard.setRotationSmooth({0,180,0})
+    topCard.setPositionSmooth({topCardPosition[1], 1.23, CardPosition[color].orig}, false, true)
+    topCard.setRotationSmooth({0,180,0}, false, true)
 end
 
 -- Move the station card to the topmost deployed spot
-function deployCard(card, xpos, ypos, upSum, color, flip)
+function deployCard(card, xpos, ypos, upSum, color, flip, shouldMoveCharges)   
+    local charges
+    if (shouldMoveCharges == true) then 
+        charges = getCharges(card)
+    end
+    
     if (flip == true) then
-        card.setRotationSmooth({0,360,0})
+        card.setRotationSmooth({0,360,0}, false, true)
     end
     card.setLock(true)
+    
     local right = CardPosition[color].right + rightIncrements[xpos+1]
     local up = CardPosition[color].up + upSum
     local height = heightFirst + (heightIncrement*(ypos))
-        card.setPositionSmooth({right, height, up})
+    card.setPositionSmooth({right, height, up}, false, true)
+    
+    if (shouldMoveCharges == true) then
+        moveCharges(card, charges)
+    end
+end
+
+function moveCharges(card, charges)
+    Wait.time(function() 
+        local snapPositions = getSnapPoints(card, true)
+        for key, charge in ipairs(charges) do
+            if (snapPositions[key] != nil) then
+                charge.setPositionSmooth(snapPositions[key], false, true)
+            else
+                charge.unregisterCollisions()
+                charge.highlightOn(Color(1, 0, 0))
+                local chargePosition = charge.getPosition()
+                charge.setPositionSmooth({chargePosition[1], 4,chargePosition[3]})
+                print('Removing extra charge')
+                Wait.time(function() Utility.call('checkDestruct', charge) end, 1.5)
+            end
+        end
+    end, 0.35)
+end
+
+-- Detect charges on the station card
+-- If there are charge slots on the deployed side, move existing charges there
+-- Delete extra charges
+function getCharges(object)
+    local hitList = Physics.cast({
+        origin       = object.getPosition(),
+        direction    = {0,1,0},
+        type         = 3,
+        size         = { 1.3, 1, 3.10},
+        max_distance = 1
+    })
+    
+    local chargeObjects = {};
+
+    for key, value in ipairs(hitList) do
+        if (value.hit_object.type == 'Block') then
+            table.insert(chargeObjects, value.hit_object)
+        end        
+    end
+
+    return chargeObjects;
+end
+
+function getSnapPoints(object, isDeployed)
+    local snapPoints = {};
+    for key, value in ipairs(object.getSnapPoints()) do
+        if (isDeployed and value.position[3] > 1) then 
+            table.insert(snapPoints, object.positionToWorld(value.position))
+        end
+        if (not isDeployed and value.position[3] < 1) then
+            table.insert(snapPoints, object.positionToWorld(value.position))
+        end
+    end
+    return snapPoints
 end
 
 -- Fill empty shy pluto spots by moving dice to the left, and then draw
