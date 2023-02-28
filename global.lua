@@ -293,36 +293,41 @@ function onObjectEnterScriptingZone(zone, card)
         if (Utility.call('isPlayerColor', playerColor) == false) then return end
         -- Get the color of the player who dropped the card
         if (LastDropped[playerColor] == card.guid) then
-            for k, rotationValue in ipairs(card.getRotationValues()) do
-                -- Sector number
-                local sectorNumber = rotationValue.value
-                if (string.find(sectorNumber, '+')) then
-                    print('A ' .. sectorNumber .. ' card must be manually deployed.')
-                    return
-                end
-                
-                sectorNumber = tonumber(sectorNumber)
-                
-                local sectorPileObject = getObjectFromGUID(PlayerBoards[playerColor][sectorNumber])
-                local deployGuid = DeploySections[playerColor][sectorNumber]
-                
-                -- We want to deploy a sector 13 card immediately
-                if (sectorNumber == 13) then
-                    local right = CardPosition[playerColor].right + rightIncrements[sectorNumber]
-                    card.setPositionSmooth({right, 2, CardPosition[playerColor].orig}, false, false)
-                    card.setRotationSmooth({0,180,0})
-                    Wait.time(function() deploy(sectorPileObject, sectorNumber, deployGuid, playerColor) end, 1.3)
-                    return
-                end
-                
-                deploy(sectorPileObject, sectorNumber, deployGuid, playerColor, false)
-                
-                local right = CardPosition[playerColor].right + rightIncrements[sectorNumber]
-                card.setPositionSmooth({right, 2, CardPosition[playerColor].orig}, false, false)
-                card.setRotationSmooth({0,180,0})
-                
-            end
+            autoDeployCard({card = card, color = playerColor})
         end
+    end
+end
+
+function autoDeployCard(parameters)
+    -- parameters: card, color
+    for k, rotationValue in ipairs(parameters.card.getRotationValues()) do
+        -- Sector number
+        local sectorNumber = rotationValue.value
+        if (string.find(sectorNumber, '+')) then
+            print('A ' .. sectorNumber .. ' card must be manually deployed.')
+            return
+        end
+        
+        sectorNumber = tonumber(sectorNumber)
+        
+        local sectorPileObject = getObjectFromGUID(PlayerBoards[parameters.color][sectorNumber])
+        local deployGuid = DeploySections[parameters.color][sectorNumber]
+        
+        -- We want to deploy a sector 13 card immediately
+        if (sectorNumber == 13) then
+            local right = CardPosition[parameters.color].right + rightIncrements[sectorNumber]
+            parameters.card.setPositionSmooth({right, 2, CardPosition[parameters.color].orig}, false, false)
+            parameters.card.setRotationSmooth({0,180,0})
+            Wait.time(function() deploy(sectorPileObject, sectorNumber, deployGuid, parameters.color) end, 1.3)
+            return
+        end
+        
+        deploy(sectorPileObject, sectorNumber, deployGuid, parameters.color, false)
+        
+        local right = CardPosition[parameters.color].right + rightIncrements[sectorNumber]
+        parameters.card.setPositionSmooth({right, 2, CardPosition[parameters.color].orig}, false, false)
+        parameters.card.setRotationSmooth({0,180,0})
+        
     end
 end
 
@@ -334,20 +339,36 @@ function start()
     end
     UI.hide('StartPanel')
     
-    Expansions.call('addSelectedExpansions')
-    
-    -- Give the starter card "Started" tag to know on load if this is loading a saved game
-    startPlayerCard.addTag('started')
-    
     -- If a 6 or 7 player game, give each player a sector 7 and 8 McCaffery Monitor-Relay Class Craft
     if (#Player.getPlayers() > 5) then
         for _, player in ipairs(Player.getPlayers()) do
             local card7 = Utility.call('getTopCard', getObjectFromGUID('6b7b2c'))
             local card8 = Utility.call('getTopCard', getObjectFromGUID('dd25cd'))
-            deployCard(card7, 6, 0, getDeployHeight(card7.guid), player.color, true, false)
-            deployCard(card8, 7, 0, getDeployHeight(card8.guid), player.color, true, false)
+            deployCard({
+                card = card7,
+                xpos = 6,
+                ypos = 0,
+                upSum = getDeployHeight(card7.guid),
+                color = player.color,
+                flip = true,
+                shouldMoveCharges = false
+            })
+            deployCard({
+                card = card8,
+                xpos = 7,
+                ypos = 0,
+                upSum = getDeployHeight(card8.guid),
+                color = player.color,
+                flip = true,
+                shouldMoveCharges = false
+            })
         end
     end
+    
+    Expansions.call('addSelectedExpansions')
+
+    -- Give the starter card "Started" tag to know on load if this is loading a saved game
+    startPlayerCard.addTag('started')
     
     -- Shuffle the sector decks
     SectorDecks.call("shuffleSectorDecks")
@@ -540,6 +561,10 @@ function toggleOption(player, value, id, key, title)
     })
 end
 
+function lightSpeedToggle(player, value, id)
+    toggleOption(player, value, id, 'haveLightSpeed', 'Light-speed Variant')
+end
+
 function biodomeToggle(player, value, id)
     toggleOption(player, value, id, 'haveBiodome', 'Biodome')
 end
@@ -556,8 +581,12 @@ function terraProximaToggle(player, value, id)
     toggleOption(player, value, id, 'haveTerraProxima', 'Terra Proxima')
 end
 
-function lightSpeedToggle(player, value, id)
-    toggleOption(player, value, id, 'haveLightSpeed', 'Light-speed Variant')
+function johnDClaireToggle(player, value, id)
+    toggleOption(player, value, id, 'haveJohnDClaire', 'John D Claire')
+end
+
+function dreadReckoningToggle(player, value, id)
+    toggleOption(player, value, id, 'haveDreadReckoning', 'Dread Reckoning')
 end
 
 function startingOptionSelected(player, option, id)
@@ -666,7 +695,15 @@ function deploy(sector, sectorNumber, deployGuid, color)
     -- Loop through deployed cards in y-position order and deploy them
     for index, card in spairs(cards, function(t,a,b) return t[b].getPosition()[3] > t[a].getPosition()[3] end) do
         upSum = upSum + getDeployHeight(card.guid)
-        deployCard(card, sectorNumber, index-1, upSum, color, flip, false)
+        deployCard({
+            card = card,
+            xpos = sectorNumber,
+            ypos = index-1,
+            upSum = upSum,
+            color = color,
+            flip = flip,
+            shouldMoveCharges = false
+        })
         deployedCount = deployedCount + 1
     end
     -- Deploy the card in the station
@@ -675,7 +712,15 @@ function deploy(sector, sectorNumber, deployGuid, color)
     if (foundCard != nil) then
         -- Don't deploy the upgrade boards even though they are technically cards
         upSum = upSum + getDeployHeight(foundCard.guid)
-        deployCard(foundCard, sectorNumber, deployedCount, upSum, color, flip, true)
+        deployCard({
+            card = foundCard,
+            xpos = sectorNumber,
+            ypos = deployedCount,
+            upSum = upSum,
+            color = color,
+            flip = flip,
+            shouldMoveCharges = true
+        })
     end
 end
 
@@ -713,24 +758,25 @@ function undeploy(sector, xpos, deployGuid, color)
 end
 
 -- Move the station card to the topmost deployed spot
-function deployCard(card, xpos, ypos, upSum, color, flip, shouldMoveCharges)   
+function deployCard(parameters)
+    -- parameters: card, xpos, ypos, upSum, color, flip, shouldMoveCharges
     local charges
-    if (shouldMoveCharges == true) then 
-        charges = getCharges(card)
+    if (parameters.shouldMoveCharges == true) then 
+        charges = getCharges(parameters.card)
     end
     
-    if (flip == true) then
-        card.setRotationSmooth({0,360,0}, false, true)
+    if (parameters.flip == true) then
+        parameters.card.setRotationSmooth({0,360,0}, false, true)
     end
-    card.setLock(true)
+    parameters.card.setLock(true)
     
-    local right = CardPosition[color].right + rightIncrements[xpos+1]
-    local up = CardPosition[color].up + upSum
-    local height = heightFirst + (heightIncrement*(ypos))
-    card.setPositionSmooth({right, height, up}, false, true)
+    local right = CardPosition[parameters.color].right + rightIncrements[parameters.xpos+1]
+    local up = CardPosition[parameters.color].up + parameters.upSum
+    local height = heightFirst + (heightIncrement*(parameters.ypos))
+    parameters.card.setPositionSmooth({right, height, up}, false, true)
     
-    if (shouldMoveCharges == true) then
-        moveCharges(card, charges)
+    if (parameters.shouldMoveCharges == true) then
+        moveCharges(parameters.card, charges)
     end
 end
 

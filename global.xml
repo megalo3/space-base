@@ -30,7 +30,7 @@
 </Panel>
 
 <!-- For game configuration before starting -->
-<Panel id="StartPanel" active="true" width="250" height="320" rectAlignment="MiddleCenter" returnToOriginalPositionWhenReleased="false" allowDragging="true" color="rgba(1,1,1,0.9)">
+<Panel id="StartPanel" active="true" width="250" height="400" rectAlignment="MiddleCenter" returnToOriginalPositionWhenReleased="false" allowDragging="true" color="rgba(1,1,1,0.9)">
     <TableLayout autoCalculateHeight="true" cellBackgroundColor="clear">
         <Row><Cell>
             <Text fontSize="18">Everyone must select their player color before starting.</Text>
@@ -53,6 +53,12 @@
         </Cell></Row>
         <Row preferredHeight="40"><Cell>
             <Button id="TerraProxima" onClick="terraProximaToggle" color="rgb(0.5,0.5,0.5)" textColor="white" fontSize="20"  height="40" width="120">Terra Proxima: Off</Button>
+        </Cell></Row>
+        <Row preferredHeight="40"><Cell>
+            <Button id="JohnDClaire" onClick="johnDClaireToggle" color="rgb(0.5,0.5,0.5)" textColor="white" fontSize="20"  height="40" width="120">John D Claire: Off</Button>
+        </Cell></Row>
+        <Row preferredHeight="40"><Cell>
+            <Button id="DreadReckoning" onClick="dreadReckoningToggle" color="rgb(0.5,0.5,0.5)" textColor="white" fontSize="20"  height="40" width="120">Dread Reckoning: Off</Button>
         </Cell></Row>
         <Row preferredHeight="40"><Cell>
             <Button id="Start" onClick="start" color="rgb(0.19,0.7,0.12)" textColor="white" fontSize="20"  height="40" width="120">Start Game</Button>

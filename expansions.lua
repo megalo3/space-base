@@ -24,7 +24,16 @@ Proxima = {
     OrangeDiceBag = '75b043',
     ShipDie = '7a3f02',
     PilotBag = '5c53c2',
-    HelpText = '21ef47'
+    HelpText = '21ef47',
+    Rulebook = 'd0f016'
+}
+JohnDClaire = {
+    Sector3 = '572c1c',
+    Title = '3343b4'
+}
+DreadReckoning = {
+    Title = 'ccba7a',
+    Sector1 = '8fae92'
 }
 AutoRoll = {
     Red = '5acb43', 
@@ -75,6 +84,8 @@ function addSelectedExpansions()
     addShyPluto()
     addBiodome()
     addTerraProxima()
+    addJohnDClaire()
+    addDreadReckoning()
     addColonyCards()
     removeUnusedExpansions()
 end
@@ -144,6 +155,40 @@ function addTerraProxima()
         else
             orangeDiceBag.shuffle()
         end
+    end
+end
+
+function addJohnDClaire()
+    if (StartPlayerCard.hasTag('haveJohnDClaire')) then
+        print('Adding John D Claire promo card.')
+        Sector3.putObject(getObjectFromGUID(JohnDClaire['Sector3']))
+    end
+end
+
+function addDreadReckoning()
+    if (StartPlayerCard.hasTag('haveDreadReckoning')) then
+        print('Deploying Dread Reckoning cards.')
+        local deck = getObjectFromGUID(DreadReckoning['Sector1'])
+        
+        -- If this is a 7 player game, we have to duplicate a random Dread Reckoning card
+        -- because there are only 6
+        if (#Player.getPlayers() > 6) then
+            deck.shuffle()
+            local taken = deck.takeObject()
+            local cloned = taken.clone()
+            deck.putObject(taken)
+            deck.putObject(cloned)
+        end
+        
+        deck.shuffle()
+        
+        -- Need to wait for 6-7 player games deployment of McCaffery Monitor-Relay Class Crafts
+        Wait.time(function()
+            for _, player in ipairs(Player.getPlayers()) do       
+                Global.call('autoDeployCard', { card = deck.takeObject(), color = player.color })
+            end
+        end, .5)
+            
     end
 end
 
@@ -303,6 +348,7 @@ function removeUnusedExpansions()
             Proxima['ShipDie'],
             Proxima['PilotBag'],
             Proxima['HelpText'],
+            Proxima['Rulebook'],
             -- script zone
             '84e601',
             -- Sector 13
@@ -317,10 +363,20 @@ function removeUnusedExpansions()
             '4f95ef', '3b4252', '85f58b', 'd382e6'
         })
     end
+    
+    if (StartPlayerCard.hasTag('haveJohnDClaire') == false) then
+        print('Removing John D Claire promo.')
+        removeMultiple({ JohnDClaire['Sector3'], JohnDClaire['Title'] })
+    end
+    
+        if (StartPlayerCard.hasTag('haveDreadReckoning') == false) then
+        print('Removing Dread Reckoning promo.')
+        removeMultiple({ DreadReckoning['Sector1'], DreadReckoning['Title'] })
+    end
 end
 
 function removeMultiple(removals)
-    for key,value in ipairs(removals) do
+    for key, value in ipairs(removals) do
         Utility.call('checkDestruct', getObjectFromGUID(value))
     end
 end
